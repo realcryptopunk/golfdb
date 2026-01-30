@@ -1,0 +1,2216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golf Swing Model Comparison</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #4ecca3;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        .summary {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .summary h2 {
+            color: #4ecca3;
+            margin-bottom: 15px;
+        }
+        .summary table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .summary th, .summary td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+        .summary th {
+            color: #4ecca3;
+        }
+        .winner {
+            color: #4ecca3;
+            font-weight: bold;
+        }
+        .loser {
+            color: #888;
+        }
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .nav button {
+            background: #16213e;
+            color: #eee;
+            border: 2px solid #4ecca3;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .nav button:hover, .nav button.active {
+            background: #4ecca3;
+            color: #1a1a2e;
+        }
+        .video-section {
+            display: none;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .video-section.active {
+            display: block;
+        }
+        .video-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .video-header h2 {
+            color: #4ecca3;
+            margin-bottom: 5px;
+        }
+        .video-header p {
+            color: #888;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+        .event-column {
+            background: #16213e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .event-header {
+            background: #0f3460;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 11px;
+            color: #4ecca3;
+        }
+        .model-section {
+            padding: 8px;
+        }
+        .model-label {
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .frame-container {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .frame-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            display: block;
+        }
+        .frame-info {
+            font-size: 9px;
+            color: #aaa;
+            text-align: center;
+            margin-top: 3px;
+        }
+        .confidence {
+            font-weight: bold;
+        }
+        .conf-high { color: #4ecca3; }
+        .conf-medium { color: #f39c12; }
+        .conf-low { color: #e74c3c; }
+
+        .metrics {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            padding: 15px;
+            background: #16213e;
+            border-radius: 8px;
+        }
+        .metric {
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4ecca3;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        @media (max-width: 1200px) {
+            .comparison-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Golf Swing Event Detection</h1>
+    <p class="subtitle">SwingNet vs CBAM-SwingNet Model Comparison</p>
+
+    <div class="summary">
+        <h2>Results Summary</h2>
+        <table>
+            <tr>
+                <th>Video</th>
+                <th>FPS</th>
+                <th>SwingNet</th>
+                <th>CBAM-SwingNet</th>
+                <th>Notes</th>
+            </tr>
+            <tr>
+                <td>test.MP4</td>
+                <td>30</td>
+                <td class="loser">54.8%</td>
+                <td class="winner">77.2%</td>
+                <td>CBAM much better, especially mid-swing</td>
+            </tr>
+            <tr>
+                <td>test3.MP4</td>
+                <td>30</td>
+                <td class="winner">80.9%</td>
+                <td class="loser">72.1%</td>
+                <td>SwingNet slightly better</td>
+            </tr>
+            <tr>
+                <td>test4.MP4</td>
+                <td>30</td>
+                <td class="loser">17.9%</td>
+                <td class="loser">11.2%</td>
+                <td>Both struggled</td>
+            </tr>
+            <tr>
+                <td>test5.MOV</td>
+                <td>30</td>
+                <td class="loser">35.1%</td>
+                <td class="winner">62.7%</td>
+                <td>CBAM much better</td>
+            </tr>
+            <tr>
+                <td>test6.MOV</td>
+                <td>30</td>
+                <td class="winner">40.8%</td>
+                <td class="loser">11.2%</td>
+                <td>SwingNet better</td>
+            </tr>
+            <tr>
+                <td>IMG_5871.mov</td>
+                <td>112 (high)</td>
+                <td class="loser">12.5%</td>
+                <td class="winner">31.2%</td>
+                <td>CBAM + FPS norm helps</td>
+            </tr>
+            <tr>
+                <td>test7.MOV</td>
+                <td>109 (high)</td>
+                <td class="loser">3.5%</td>
+                <td class="loser">9.8%</td>
+                <td>Both struggled</td>
+            </tr>
+            <tr>
+                <td>test7 CROPPED</td>
+                <td>109 (high)</td>
+                <td class="loser">30.3%</td>
+                <td class="winner">73.8%</td>
+                <td>Cropping helped massively!</td>
+            </tr>
+            <tr>
+                <td>test_cropped100.MOV</td>
+                <td>30</td>
+                <td class="loser">55.6%</td>
+                <td class="winner">78.3%</td>
+                <td>8.9s segment - CBAM better on all events</td>
+            </tr>
+            <tr>
+                <td>test8.MP4</td>
+                <td>30</td>
+                <td class="loser">53.7%</td>
+                <td class="winner">59.9%</td>
+                <td>CBAM slightly better, strong on Impact/Follow-through</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="nav">
+        <button onclick="showVideo('test')" class="active">test.MP4</button>
+        <button onclick="showVideo('test3')">test3.MP4</button>
+        <button onclick="showVideo('test4')">test4.MP4</button>
+        <button onclick="showVideo('test5')">test5.MOV</button>
+        <button onclick="showVideo('test6')">test6.MOV</button>
+        <button onclick="showVideo('img5871')">IMG_5871 (112fps)</button>
+        <button onclick="showVideo('test7')">test7.MOV (109fps)</button>
+        <button onclick="showVideo('test7_cropped')">test7 CROPPED</button>
+        <button onclick="showVideo('testcropped100')">test_cropped100.MOV</button>
+        <button onclick="showVideo('test8')">test8.MP4</button>
+    </div>
+
+    <!-- Test (test.MP4) -->
+    <div id="test" class="video-section active">
+        <div class="video-header">
+            <h2>test.MP4</h2>
+            <p>30 FPS | SwingNet: 54.8% avg | CBAM: 77.2% avg</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_original/1_Address_frame156.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 156 | <span class="confidence conf-low">21.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_cbam/1_Address_frame155.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 155 | <span class="confidence conf-medium">59.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_original/2_Toe_up_frame165.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 165 | <span class="confidence conf-high">86.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_cbam/2_Toe_up_frame166.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 166 | <span class="confidence conf-high">82.4%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_original/3_Mid_backswing_frame170.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 170 | <span class="confidence conf-high">78.0%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_cbam/3_Mid_backswing_frame169.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 169 | <span class="confidence conf-high">91.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_original/4_Top_frame179.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 179 | <span class="confidence conf-high">87.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_cbam/4_Top_frame178.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 178 | <span class="confidence conf-high">84.7%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">5. Mid-downswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_original/5_Mid_downswing_frame182.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 182 | <span class="confidence conf-medium">47.3%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_cbam/5_Mid_downswing_frame182.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 182 | <span class="confidence conf-high">97.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">6. Impact</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_original/6_Impact_frame185.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 185 | <span class="confidence conf-low">31.3%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_cbam/6_Impact_frame185.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 185 | <span class="confidence conf-high">89.8%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">7. Mid-follow-through</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_original/7_Mid_follow_through_frame187.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 187 | <span class="confidence conf-medium">60.5%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_cbam/7_Mid_follow_through_frame187.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 187 | <span class="confidence conf-high">95.4%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">8. Finish</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_original/8_Finish_frame200.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 200 | <span class="confidence conf-low">24.8%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test_cbam/8_Finish_frame220.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 220 | <span class="confidence conf-low">18.4%</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value">77.2%</div>
+                <div class="metric-label">CBAM Avg Confidence</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">54.8%</div>
+                <div class="metric-label">SwingNet Avg Confidence</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">0.767s</div>
+                <div class="metric-label">Backswing</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">0.233s</div>
+                <div class="metric-label">Downswing</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test3 -->
+    <div id="test3" class="video-section">
+        <div class="video-header">
+            <h2>test3.MP4</h2>
+            <p>30 FPS | SwingNet: 80.9% avg | CBAM: 72.1% avg</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_original/1_Address_frame66.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 66 | <span class="confidence conf-medium">58.4%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_cbam/1_Address_frame69.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 69 | <span class="confidence conf-medium">48.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_original/2_Toe_up_frame81.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 81 | <span class="confidence conf-high">73.4%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_cbam/2_Toe_up_frame83.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 83 | <span class="confidence conf-high">73.9%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_original/3_Mid_backswing_frame87.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 87 | <span class="confidence conf-high">94.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_cbam/3_Mid_backswing_frame87.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 87 | <span class="confidence conf-high">89.0%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_original/4_Top_frame99.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 99 | <span class="confidence conf-high">85.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_cbam/4_Top_frame99.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 99 | <span class="confidence conf-medium">54.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">5. Mid-downswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_original/5_Mid_downswing_frame103.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 103 | <span class="confidence conf-high">99.3%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_cbam/5_Mid_downswing_frame103.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 103 | <span class="confidence conf-high">99.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">6. Impact</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_original/6_Impact_frame106.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 106 | <span class="confidence conf-high">95.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_cbam/6_Impact_frame106.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 106 | <span class="confidence conf-high">90.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">7. Mid-follow-through</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_original/7_Mid_follow_through_frame109.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 109 | <span class="confidence conf-high">98.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_cbam/7_Mid_follow_through_frame109.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 109 | <span class="confidence conf-high">88.2%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">8. Finish</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_original/8_Finish_frame166.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 166 | <span class="confidence conf-medium">41.1%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test3_cbam/8_Finish_frame121.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 121 | <span class="confidence conf-low">32.6%</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test4 -->
+    <div id="test4" class="video-section">
+        <div class="video-header">
+            <h2>test4.MP4</h2>
+            <p>30 FPS | SwingNet: 17.9% avg | CBAM: 11.2% avg | Both models struggled with this video</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_original/1_Address_frame33.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 33 | <span class="confidence conf-low">9.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/1_Address_frame63.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 63 | <span class="confidence conf-low">2.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_original/2_Toe_up_frame191.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 191 | <span class="confidence conf-low">19.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/2_Toe_up_frame191.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 191 | <span class="confidence conf-low">3.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_original/3_Mid_backswing_frame75.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 75 | <span class="confidence conf-low">19.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/3_Mid_backswing_frame202.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 202 | <span class="confidence conf-low">4.5%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_original/4_Top_frame103.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 103 | <span class="confidence conf-low">23.4%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/4_Top_frame202.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 202 | <span class="confidence conf-low">0.4%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">5. Mid-downswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_original/5_Mid_downswing_frame108.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 108 | <span class="confidence conf-medium">43.8%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/5_Mid_downswing_frame207.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 207 | <span class="confidence conf-low">2.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">6. Impact</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_original/6_Impact_frame247.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 247 | <span class="confidence conf-low">9.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/6_Impact_frame64.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 64 | <span class="confidence conf-low">3.7%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">7. Mid-follow-through</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_original/7_Mid_follow_through_frame55.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 55 | <span class="confidence conf-low">7.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/7_Mid_follow_through_frame192.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 192 | <span class="confidence conf-medium">58.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">8. Finish</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_original/8_Finish_frame18.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 18 | <span class="confidence conf-low">9.1%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/8_Finish_frame202.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 202 | <span class="confidence conf-low">14.7%</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test5 -->
+    <div id="test5" class="video-section">
+        <div class="video-header">
+            <h2>test5.MOV</h2>
+            <p>30 FPS | SwingNet: 35.1% avg | CBAM: 62.7% avg | CBAM significantly outperforms</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_original/1_Address_frame192.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 192 | <span class="confidence conf-low">4.5%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_cbam/1_Address_frame190.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 190 | <span class="confidence conf-low">4.0%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_original/2_Toe_up_frame198.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 198 | <span class="confidence conf-low">7.0%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_cbam/2_Toe_up_frame198.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 198 | <span class="confidence conf-medium">52.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_original/3_Mid_backswing_frame200.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 200 | <span class="confidence conf-low">14.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_cbam/3_Mid_backswing_frame202.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 202 | <span class="confidence conf-high">66.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_original/4_Top_frame214.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 214 | <span class="confidence conf-low">25.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_cbam/4_Top_frame213.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 213 | <span class="confidence conf-high">67.9%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">5. Mid-downswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_original/5_Mid_downswing_frame218.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 218 | <span class="confidence conf-high">93.5%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_cbam/5_Mid_downswing_frame218.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 218 | <span class="confidence conf-high">99.0%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">6. Impact</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_original/6_Impact_frame221.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 221 | <span class="confidence conf-high">75.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_cbam/6_Impact_frame222.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 222 | <span class="confidence conf-high">91.7%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">7. Mid-follow-through</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_original/7_Mid_follow_through_frame224.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 224 | <span class="confidence conf-medium">47.5%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_cbam/7_Mid_follow_through_frame224.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 224 | <span class="confidence conf-high">97.8%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">8. Finish</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_original/8_Finish_frame227.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 227 | <span class="confidence conf-low">12.1%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test5_cbam/8_Finish_frame247.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 247 | <span class="confidence conf-low">23.5%</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test6 -->
+    <div id="test6" class="video-section">
+        <div class="video-header">
+            <h2>test6.MOV</h2>
+            <p>30 FPS | SwingNet: 40.8% avg | CBAM: 11.2% avg | SwingNet performs better</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_original/1_Address_frame38.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 38 | <span class="confidence conf-medium">47.5%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/1_Address_frame41.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 41 | <span class="confidence conf-low">8.7%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_original/2_Toe_up_frame56.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 56 | <span class="confidence conf-medium">57.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/2_Toe_up_frame56.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 56 | <span class="confidence conf-low">29.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_original/3_Mid_backswing_frame61.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 61 | <span class="confidence conf-medium">48.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/3_Mid_backswing_frame61.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 61 | <span class="confidence conf-low">31.9%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_original/4_Top_frame71.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 71 | <span class="confidence conf-low">39.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/4_Top_frame63.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 63 | <span class="confidence conf-low">1.2%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">5. Mid-downswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_original/5_Mid_downswing_frame74.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 74 | <span class="confidence conf-medium">54.3%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/5_Mid_downswing_frame61.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 61 | <span class="confidence conf-low">1.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">6. Impact</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_original/6_Impact_frame76.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 76 | <span class="confidence conf-medium">43.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/6_Impact_frame81.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 81 | <span class="confidence conf-low">0.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">7. Mid-follow-through</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_original/7_Mid_follow_through_frame81.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 81 | <span class="confidence conf-low">24.3%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/7_Mid_follow_through_frame64.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 64 | <span class="confidence conf-low">4.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">8. Finish</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_original/8_Finish_frame99.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 99 | <span class="confidence conf-medium">10.0%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/8_Finish_frame76.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 76 | <span class="confidence conf-low">11.1%</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMG5871 High FPS -->
+    <div id="img5871" class="video-section">
+        <div class="video-header">
+            <h2>IMG_5871.mov (High FPS)</h2>
+            <p>112 FPS | SwingNet: 12.5% avg (no FPS norm) | CBAM: 31.2% avg (with FPS normalization to 28fps)</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (112fps)</div>
+                    <div class="frame-container">
+                        <img src="img5871_original/1_Address_frame147.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 147 | <span class="confidence conf-low">0.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (28fps norm)</div>
+                    <div class="frame-container">
+                        <img src="img5871_cbam/1_Address_frame52.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 52 | <span class="confidence conf-low">29.4%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (112fps)</div>
+                    <div class="frame-container">
+                        <img src="img5871_original/2_Toe_up_frame128.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 128 | <span class="confidence conf-low">35.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (28fps norm)</div>
+                    <div class="frame-container">
+                        <img src="img5871_cbam/2_Toe_up_frame100.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 100 | <span class="confidence conf-low">34.9%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (112fps)</div>
+                    <div class="frame-container">
+                        <img src="img5871_original/3_Mid_backswing_frame239.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 239 | <span class="confidence conf-low">39.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (28fps norm)</div>
+                    <div class="frame-container">
+                        <img src="img5871_cbam/3_Mid_backswing_frame120.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 120 | <span class="confidence conf-high">73.7%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (112fps)</div>
+                    <div class="frame-container">
+                        <img src="img5871_original/4_Top_frame83.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 83 | <span class="confidence conf-low">1.8%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (28fps norm)</div>
+                    <div class="frame-container">
+                        <img src="img5871_cbam/4_Top_frame144.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 144 | <span class="confidence conf-low">13.8%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">5. Mid-downswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (112fps)</div>
+                    <div class="frame-container">
+                        <img src="img5871_original/5_Mid_downswing_frame191.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 191 | <span class="confidence conf-low">12.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (28fps norm)</div>
+                    <div class="frame-container">
+                        <img src="img5871_cbam/5_Mid_downswing_frame188.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 188 | <span class="confidence conf-high">67.5%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">6. Impact</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (112fps)</div>
+                    <div class="frame-container">
+                        <img src="img5871_original/8_Finish_frame359.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">N/A | <span class="confidence conf-low">2.1%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (28fps norm)</div>
+                    <div class="frame-container">
+                        <img src="img5871_cbam/6_Impact_frame208.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 208 | <span class="confidence conf-low">5.3%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">7. Mid-follow-through</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (112fps)</div>
+                    <div class="frame-container">
+                        <img src="img5871_original/8_Finish_frame359.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">N/A | <span class="confidence conf-low">1.1%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (28fps norm)</div>
+                    <div class="frame-container">
+                        <img src="img5871_cbam/7_Mid_follow_through_frame256.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 256 | <span class="confidence conf-low">21.5%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">8. Finish</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (112fps)</div>
+                    <div class="frame-container">
+                        <img src="img5871_original/8_Finish_frame359.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 359 | <span class="confidence conf-low">6.0%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (28fps norm)</div>
+                    <div class="frame-container">
+                        <img src="img5871_cbam/8_Finish_frame256.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 256 | <span class="confidence conf-low">3.9%</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test7 High FPS -->
+    <div id="test7" class="video-section">
+        <div class="video-header">
+            <h2>test7.MOV (High FPS)</h2>
+            <p>109 FPS | SwingNet: 3.5% avg | CBAM: 9.8% avg (with FPS normalization) | Both models struggled</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (109fps)</div>
+                    <div class="frame-container">
+                        <img src="test7_original/1_Address_frame192.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 192 | <span class="confidence conf-low">0.2%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (27fps norm)</div>
+                    <div class="frame-container">
+                        <img src="test7_cbam/1_Address_frame8.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 8 | <span class="confidence conf-low">6.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (109fps)</div>
+                    <div class="frame-container">
+                        <img src="test7_original/2_Toe_up_frame193.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 193 | <span class="confidence conf-low">2.8%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (27fps norm)</div>
+                    <div class="frame-container">
+                        <img src="test7_cbam/2_Toe_up_frame36.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 36 | <span class="confidence conf-low">3.5%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (109fps)</div>
+                    <div class="frame-container">
+                        <img src="test7_original/3_Mid_backswing_frame198.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 198 | <span class="confidence conf-low">2.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (27fps norm)</div>
+                    <div class="frame-container">
+                        <img src="test7_cbam/3_Mid_backswing_frame100.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 100 | <span class="confidence conf-low">23.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (109fps)</div>
+                    <div class="frame-container">
+                        <img src="test7_original/4_Top_frame156.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 156 | <span class="confidence conf-low">1.8%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (27fps norm)</div>
+                    <div class="frame-container">
+                        <img src="test7_cbam/4_Top_frame252.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 252 | <span class="confidence conf-low">3.3%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">5. Mid-downswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (109fps)</div>
+                    <div class="frame-container">
+                        <img src="test7_original/5_Mid_downswing_frame186.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 186 | <span class="confidence conf-low">8.3%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (27fps norm)</div>
+                    <div class="frame-container">
+                        <img src="test7_cbam/5_Mid_downswing_frame180.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 180 | <span class="confidence conf-low">17.3%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">6. Impact</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (109fps)</div>
+                    <div class="frame-container">
+                        <img src="test7_original/6_Impact_frame461.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 461 | <span class="confidence conf-low">4.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (27fps norm)</div>
+                    <div class="frame-container">
+                        <img src="test7_cbam/6_Impact_frame0.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 0 | <span class="confidence conf-low">5.4%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">7. Mid-follow-through</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (109fps)</div>
+                    <div class="frame-container">
+                        <img src="test7_original/7_Mid_follow_through_frame359.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 359 | <span class="confidence conf-low">3.3%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (27fps norm)</div>
+                    <div class="frame-container">
+                        <img src="test7_cbam/7_Mid_follow_through_frame8.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 8 | <span class="confidence conf-low">7.5%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">8. Finish</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet (109fps)</div>
+                    <div class="frame-container">
+                        <img src="test7_original/8_Finish_frame188.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 188 | <span class="confidence conf-low">3.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM (27fps norm)</div>
+                    <div class="frame-container">
+                        <img src="test7_cbam/8_Finish_frame452.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 452 | <span class="confidence conf-low">11.4%</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test7 Cropped -->
+    <div id="test7_cropped" class="video-section">
+        <div class="video-header">
+            <h2>test7.MOV CROPPED</h2>
+            <p>109 FPS | SwingNet: 30.3% avg | CBAM: 73.8% avg | Cropping dramatically improved results!</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_original/1_Address_frame56.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 56 | <span class="confidence conf-low">6.2%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_cbam/1_Address_frame36.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 36 | <span class="confidence conf-medium">53.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_original/2_Toe_up_frame77.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 77 | <span class="confidence conf-high">60.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_cbam/2_Toe_up_frame80.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 80 | <span class="confidence conf-high">73.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_original/3_Mid_backswing_frame106.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 106 | <span class="confidence conf-high">76.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_cbam/3_Mid_backswing_frame104.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 104 | <span class="confidence conf-high">86.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_original/4_Top_frame181.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 181 | <span class="confidence conf-low">2.4%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_cbam/4_Top_frame164.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 164 | <span class="confidence conf-high">78.7%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">5. Mid-downswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_original/5_Mid_downswing_frame177.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 177 | <span class="confidence conf-medium">42.3%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_cbam/5_Mid_downswing_frame180.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 180 | <span class="confidence conf-high">96.0%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">6. Impact</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_original/6_Impact_frame200.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 200 | <span class="confidence conf-low">9.8%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_cbam/6_Impact_frame196.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 196 | <span class="confidence conf-high">93.3%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">7. Mid-follow-through</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_original/7_Mid_follow_through_frame215.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 215 | <span class="confidence conf-low">29.1%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_cbam/7_Mid_follow_through_frame204.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 204 | <span class="confidence conf-high">87.9%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">8. Finish</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_original/8_Finish_frame304.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 304 | <span class="confidence conf-low">15.3%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test7_cropped_cbam/8_Finish_frame416.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 416 | <span class="confidence conf-low">22.0%</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- test_cropped100.MOV -->
+    <div id="testcropped100" class="video-section">
+        <div class="video-header">
+            <h2>test_cropped100.MOV</h2>
+            <p>30 FPS | 8.9s segment (266 frames) | SwingNet: 55.6% avg | CBAM: 78.3% avg</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_original/1_Address_frame12.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 12 | <span class="confidence conf-low">27.4%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_cbam/1_Address_frame11.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 11 | <span class="confidence conf-medium">56.8%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_original/2_Toe_up_frame21.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 21 | <span class="confidence conf-high">86.2%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_cbam/2_Toe_up_frame22.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 22 | <span class="confidence conf-high">82.9%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_original/3_Mid_backswing_frame26.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 26 | <span class="confidence conf-high">77.0%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_cbam/3_Mid_backswing_frame25.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 25 | <span class="confidence conf-high">90.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_original/4_Top_frame35.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 35 | <span class="confidence conf-high">86.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_cbam/4_Top_frame34.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 34 | <span class="confidence conf-high">82.4%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">5. Mid-downswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_original/5_Mid_downswing_frame38.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 38 | <span class="confidence conf-medium">46.5%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_cbam/5_Mid_downswing_frame38.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 38 | <span class="confidence conf-high">96.7%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">6. Impact</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_original/6_Impact_frame41.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 41 | <span class="confidence conf-low">28.1%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_cbam/6_Impact_frame41.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 41 | <span class="confidence conf-high">91.5%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">7. Mid-follow-through</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_original/7_Mid_follow_through_frame43.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 43 | <span class="confidence conf-medium">57.1%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_cbam/7_Mid_follow_through_frame43.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 43 | <span class="confidence conf-high">96.0%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">8. Finish</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_original/8_Finish_frame56.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 56 | <span class="confidence conf-low">36.2%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="testcropped100_cbam/8_Finish_frame61.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 61 | <span class="confidence conf-low">30.3%</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value">78.3%</div>
+                <div class="metric-label">CBAM Avg Confidence</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">55.6%</div>
+                <div class="metric-label">SwingNet Avg Confidence</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">0.769s</div>
+                <div class="metric-label">Backswing</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">0.234s</div>
+                <div class="metric-label">Downswing</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- TEMPORAL ORDERING COMPARISON SECTION -->
+    <!-- ============================================== -->
+    <div class="summary" style="margin-top: 50px; border: 2px solid #e67e22;">
+        <h2 style="color: #e67e22;">Temporal Ordering Comparison (CBAM-SwingNet)</h2>
+        <p style="color: #aaa; margin-bottom: 15px;">
+            <strong>Old (Independent):</strong> Each event finds its global peak frame independently. Can produce out-of-order events.<br>
+            <strong>New (Temporal):</strong> Events are found in order (Address→Finish). Each event must be at or after the previous. Enforces monotonically increasing frame indices.
+        </p>
+        <table>
+            <tr>
+                <th>Video</th>
+                <th>CBAM Independent</th>
+                <th>CBAM Temporal</th>
+                <th>Changed?</th>
+                <th>Notes</th>
+            </tr>
+            <tr>
+                <td>test.MP4</td>
+                <td>77.2%</td>
+                <td>77.2%</td>
+                <td style="color: #888;">No</td>
+                <td>Already in order</td>
+            </tr>
+            <tr>
+                <td>test3.MP4</td>
+                <td>72.1%</td>
+                <td>72.1%</td>
+                <td style="color: #888;">No</td>
+                <td>Already in order</td>
+            </tr>
+            <tr>
+                <td>test4.MP4</td>
+                <td>11.2%</td>
+                <td style="color: #e67e22;">9.6%</td>
+                <td style="color: #e67e22;">Yes</td>
+                <td>Old had Impact(64) before Toe-up(191) - temporal fixes ordering</td>
+            </tr>
+            <tr>
+                <td>test5.MOV</td>
+                <td>62.7%</td>
+                <td>62.7%</td>
+                <td style="color: #888;">No</td>
+                <td>Already in order</td>
+            </tr>
+            <tr>
+                <td>test6.MOV</td>
+                <td>11.2%</td>
+                <td style="color: #e67e22;">10.7%</td>
+                <td style="color: #e67e22;">Yes</td>
+                <td>Old had Follow-through(64) before Downswing(61) - temporal fixes ordering</td>
+            </tr>
+            <tr>
+                <td>test7 CROPPED</td>
+                <td>73.8%</td>
+                <td>73.8%</td>
+                <td style="color: #888;">No</td>
+                <td>Already in order</td>
+            </tr>
+            <tr>
+                <td>test8.MP4</td>
+                <td>59.9%</td>
+                <td>59.9%</td>
+                <td style="color: #888;">No</td>
+                <td>Already in order</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="nav">
+        <button onclick="showVideo('test4_temporal')" style="border-color: #e67e22;">test4 Temporal vs Independent</button>
+        <button onclick="showVideo('test6_temporal')" style="border-color: #e67e22;">test6 Temporal vs Independent</button>
+    </div>
+
+    <!-- Test4 Temporal Comparison -->
+    <div id="test4_temporal" class="video-section">
+        <div class="video-header">
+            <h2 style="color: #e67e22;">test4.MP4 - CBAM: Independent vs Temporal</h2>
+            <p>30 FPS | Independent: 11.2% avg | Temporal: 9.6% avg | Temporal fixes out-of-order events</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/1_Address_frame63.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 63 | <span class="confidence conf-low">2.1%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam_temporal/1_Address_frame63.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 63 | <span class="confidence conf-low">2.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/2_Toe_up_frame191.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 191 | <span class="confidence conf-low">3.1%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam_temporal/2_Toe_up_frame191.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 191 | <span class="confidence conf-low">3.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/3_Mid_backswing_frame202.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 202 | <span class="confidence conf-low">4.5%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam_temporal/3_Mid_backswing_frame202.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 202 | <span class="confidence conf-low">4.5%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/4_Top_frame202.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 202 | <span class="confidence conf-low">0.4%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam_temporal/4_Top_frame202.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 202 | <span class="confidence conf-low">0.4%</span></div>
+                </div>
+            </div>
+            <div class="event-column" style="border: 2px solid #e67e22;">
+                <div class="event-header" style="background: #e67e22; color: #1a1a2e;">5. Mid-downswing *</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/5_Mid_downswing_frame207.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 207 | <span class="confidence conf-low">2.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam_temporal/5_Mid_downswing_frame207.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 207 | <span class="confidence conf-low">2.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column" style="border: 2px solid #e67e22;">
+                <div class="event-header" style="background: #e67e22; color: #1a1a2e;">6. Impact *</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/6_Impact_frame64.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info" style="color: #e74c3c;">Frame 64 (OUT OF ORDER!) | <span class="confidence conf-low">3.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam_temporal/6_Impact_frame216.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 216 | <span class="confidence conf-low">0.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column" style="border: 2px solid #e67e22;">
+                <div class="event-header" style="background: #e67e22; color: #1a1a2e;">7. Mid-follow-through *</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/7_Mid_follow_through_frame192.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info" style="color: #e74c3c;">Frame 192 (OUT OF ORDER!) | <span class="confidence conf-medium">58.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam_temporal/7_Mid_follow_through_frame256.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 256 | <span class="confidence conf-medium">49.3%</span></div>
+                </div>
+            </div>
+            <div class="event-column" style="border: 2px solid #e67e22;">
+                <div class="event-header" style="background: #e67e22; color: #1a1a2e;">8. Finish *</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam/8_Finish_frame202.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info" style="color: #e74c3c;">Frame 202 (OUT OF ORDER!) | <span class="confidence conf-low">14.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test4_cbam_temporal/8_Finish_frame258.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 258 | <span class="confidence conf-low">14.1%</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value">11.2%</div>
+                <div class="metric-label">Independent Avg</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">9.6%</div>
+                <div class="metric-label">Temporal Avg</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" style="color: #e67e22;">3 events</div>
+                <div class="metric-label">Out-of-order (Independent)</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" style="color: #4ecca3;">0 events</div>
+                <div class="metric-label">Out-of-order (Temporal)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test6 Temporal Comparison -->
+    <div id="test6_temporal" class="video-section">
+        <div class="video-header">
+            <h2 style="color: #e67e22;">test6.MOV - CBAM: Independent vs Temporal</h2>
+            <p>30 FPS | Independent: 11.2% avg | Temporal: 10.7% avg | Temporal fixes out-of-order events</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/1_Address_frame41.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 41 | <span class="confidence conf-low">8.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam_temporal/1_Address_frame41.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 41 | <span class="confidence conf-low">8.7%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/2_Toe_up_frame56.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 56 | <span class="confidence conf-low">29.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam_temporal/2_Toe_up_frame56.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 56 | <span class="confidence conf-low">29.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/3_Mid_backswing_frame61.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 61 | <span class="confidence conf-low">31.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam_temporal/3_Mid_backswing_frame61.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 61 | <span class="confidence conf-low">31.9%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/4_Top_frame63.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 63 | <span class="confidence conf-low">1.2%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam_temporal/4_Top_frame63.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 63 | <span class="confidence conf-low">1.2%</span></div>
+                </div>
+            </div>
+            <div class="event-column" style="border: 2px solid #e67e22;">
+                <div class="event-header" style="background: #e67e22; color: #1a1a2e;">5. Mid-downswing *</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/5_Mid_downswing_frame61.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info" style="color: #e74c3c;">Frame 61 (OUT OF ORDER!) | <span class="confidence conf-low">1.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam_temporal/5_Mid_downswing_frame76.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 76 | <span class="confidence conf-low">1.5%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">6. Impact</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/6_Impact_frame81.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 81 | <span class="confidence conf-low">0.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam_temporal/6_Impact_frame81.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 81 | <span class="confidence conf-low">0.6%</span></div>
+                </div>
+            </div>
+            <div class="event-column" style="border: 2px solid #e67e22;">
+                <div class="event-header" style="background: #e67e22; color: #1a1a2e;">7. Mid-follow-through *</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/7_Mid_follow_through_frame64.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info" style="color: #e74c3c;">Frame 64 (OUT OF ORDER!) | <span class="confidence conf-low">4.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam_temporal/7_Mid_follow_through_frame81.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 81 | <span class="confidence conf-low">1.9%</span></div>
+                </div>
+            </div>
+            <div class="event-column" style="border: 2px solid #e67e22;">
+                <div class="event-header" style="background: #e67e22; color: #1a1a2e;">8. Finish *</div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Independent</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam/8_Finish_frame76.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info" style="color: #e74c3c;">Frame 76 (OUT OF ORDER!) | <span class="confidence conf-low">11.1%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM Temporal</div>
+                    <div class="frame-container">
+                        <img src="test6_cbam_temporal/8_Finish_frame87.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 87 | <span class="confidence conf-low">10.3%</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value">11.2%</div>
+                <div class="metric-label">Independent Avg</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">10.7%</div>
+                <div class="metric-label">Temporal Avg</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" style="color: #e67e22;">3 events</div>
+                <div class="metric-label">Out-of-order (Independent)</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" style="color: #4ecca3;">0 events</div>
+                <div class="metric-label">Out-of-order (Temporal)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test8 -->
+    <div id="test8" class="video-section">
+        <div class="video-header">
+            <h2>test8.MP4</h2>
+            <p>30 FPS | SwingNet: 53.7% avg | CBAM: 59.9% avg</p>
+        </div>
+        <div class="comparison-grid">
+            <div class="event-column">
+                <div class="event-header">1. Address</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_original/1_Address_frame129.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 129 | <span class="confidence conf-low">14.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_cbam/1_Address_frame122.jpg" alt="Address">
+                    </div>
+                    <div class="frame-info">Frame 122 | <span class="confidence conf-low">8.8%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">2. Toe-up</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_original/2_Toe_up_frame137.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 137 | <span class="confidence conf-high">84.8%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_cbam/2_Toe_up_frame137.jpg" alt="Toe-up">
+                    </div>
+                    <div class="frame-info">Frame 137 | <span class="confidence conf-high">72.5%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">3. Mid-backswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_original/3_Mid_backswing_frame140.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 140 | <span class="confidence conf-high">72.8%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_cbam/3_Mid_backswing_frame140.jpg" alt="Mid-backswing">
+                    </div>
+                    <div class="frame-info">Frame 140 | <span class="confidence conf-low">31.9%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">4. Top</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_original/4_Top_frame146.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 146 | <span class="confidence conf-medium">51.6%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_cbam/4_Top_frame147.jpg" alt="Top">
+                    </div>
+                    <div class="frame-info">Frame 147 | <span class="confidence conf-high">74.4%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">5. Mid-downswing</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_original/5_Mid_downswing_frame149.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 149 | <span class="confidence conf-medium">42.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_cbam/5_Mid_downswing_frame151.jpg" alt="Mid-downswing">
+                    </div>
+                    <div class="frame-info">Frame 151 | <span class="confidence conf-high">69.2%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">6. Impact</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_original/6_Impact_frame154.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 154 | <span class="confidence conf-high">77.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_cbam/6_Impact_frame154.jpg" alt="Impact">
+                    </div>
+                    <div class="frame-info">Frame 154 | <span class="confidence conf-high">96.1%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">7. Mid-follow-through</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_original/7_Mid_follow_through_frame156.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 156 | <span class="confidence conf-high">70.9%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_cbam/7_Mid_follow_through_frame156.jpg" alt="Mid-follow-through">
+                    </div>
+                    <div class="frame-info">Frame 156 | <span class="confidence conf-high">93.8%</span></div>
+                </div>
+            </div>
+            <div class="event-column">
+                <div class="event-header">8. Finish</div>
+                <div class="model-section">
+                    <div class="model-label">SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_original/8_Finish_frame176.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 176 | <span class="confidence conf-low">14.7%</span></div>
+                </div>
+                <div class="model-section">
+                    <div class="model-label">CBAM-SwingNet</div>
+                    <div class="frame-container">
+                        <img src="test8_cbam/8_Finish_frame172.jpg" alt="Finish">
+                    </div>
+                    <div class="frame-info">Frame 172 | <span class="confidence conf-low">32.1%</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value">59.9%</div>
+                <div class="metric-label">CBAM Avg Confidence</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">53.7%</div>
+                <div class="metric-label">SwingNet Avg Confidence</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">0.833s</div>
+                <div class="metric-label">Backswing</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">0.233s</div>
+                <div class="metric-label">Downswing</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showVideo(id) {
+            // Hide all sections
+            document.querySelectorAll('.video-section').forEach(s => s.classList.remove('active'));
+            // Remove active from all buttons
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+
+            // Show selected section
+            document.getElementById(id).classList.add('active');
+            // Activate clicked button
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

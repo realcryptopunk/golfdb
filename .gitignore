@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Large video files (keep small samples)
+*.MOV
+*.mov
+test7_cropped.mp4
+test_cropped_100.mp4
+test_ios_segment.mp4
+test_cropped100.MOV
+
+# Keep these small test videos for demo purposes
+!sample_swing.mp4
+!golf_swing.mp4
+
+# Temp files
+*.tmp
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Event frame directories (generated output, not comparison frames)
+event_frames/
+event_frames_*/
+cbam_swingnet/event_frames_*/
+
+# Duplicate comparison in cbam_swingnet
+cbam_swingnet/comparison/
